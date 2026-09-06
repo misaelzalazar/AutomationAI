@@ -1,0 +1,3619 @@
+{
+  "name": "Ecosistema IA - Procesamiento de Pedidos (Trigger a Entrega)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "nuevo-pedido",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "77b93d06-09f1-4051-a497-29b753a2f539",
+      "name": "Trigger - Nuevo Pedido (Webhook)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -720,
+        448
+      ],
+      "webhookId": "nuevo-pedido-ecosistema-ia"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body || $json;\nconst requiredFields = ['id_pedido', 'tienda', 'fecha_pedido', 'items'];\nconst missing = requiredFields.filter(f => body[f] === undefined || body[f] === null || body[f] === '');\nconst itemsValid = Array.isArray(body.items) && body.items.length > 0;\nreturn [{ json: { ...body, datos_completos: missing.length === 0 && itemsValid, campos_faltantes: missing.concat(itemsValid ? [] : ['items (vacio o invalido)']).join(', ') } }];"
+      },
+      "id": "c90ccc20-405b-4a57-bd62-d2d752e08682",
+      "name": "Code - Normalizar y Validar Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "5b785486-a4ea-4530-a4b5-c7b55fbf4714",
+              "leftValue": "={{ $json.datos_completos }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8ab2ba43-b4b6-4ae7-9149-39edb61b1f15",
+      "name": "IF - Datos de Entrada Completos",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -240,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "app2Mcfjlv994NrMa",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl7oUxwqicXiBjFX",
+          "mode": "id"
+        },
+        "filterByFormula": "={{'{' + 'fldzC2Rw3CSlJ8OHl}' + \" = '\" + $json.id_pedido + \"'\"}}",
+        "options": {}
+      },
+      "id": "254ce7c7-2787-4903-8ace-07d4fd1e3ecb",
+      "name": "Airtable - Verificar Pedido Duplicado (Anti-Loop)",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        608
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "alwaysOutputData": true,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "JOHtFfBVeDJ1CcXH",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "24a360bc-a1eb-4fac-ad07-7ff669224eb7",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "02afcb76-161b-4679-8b9b-3b7aeda74b3d",
+      "name": "IF - Pedido Ya Existe (Anti-Loop)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "app2Mcfjlv994NrMa",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblulN0FBN8ZQPCPg",
+          "mode": "id"
+        },
+        "filterByFormula": "={{'{' + 'fldET6nNvVEes0UIR}' + \" = '\" + $('Code - Normalizar y Validar Payload').item.json.tienda + \"'\"}}",
+        "options": {}
+      },
+      "id": "781db6a2-3386-44cc-9cb9-da1749447505",
+      "name": "Airtable - Buscar Cliente por Tienda",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        480,
+        768
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "alwaysOutputData": true,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "JOHtFfBVeDJ1CcXH",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d1a48558-4e4c-43e3-81d9-2ab0da542caf",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists"
+              }
+            },
+            {
+              "id": "f5fbae3f-d59f-401f-a82b-3b0a3a82ef0f",
+              "leftValue": "={{ $json.fields?.['Estado Cliente'] }}",
+              "rightValue": "Activo",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6fe0929e-6018-4e5a-a1c4-6b702ee9d1c4",
+      "name": "IF - Cliente Encontrado y Activo",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        768
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "app2Mcfjlv994NrMa",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblVZXJQV9YNMXjfj",
+          "mode": "id"
+        },
+        "filterByFormula": "={{ '' }}",
+        "options": {}
+      },
+      "id": "83ea69e9-5849-4495-83de-8994e65cbd8a",
+      "name": "Airtable - Consultar Stock Disponible",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        960,
+        928
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "alwaysOutputData": true,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "JOHtFfBVeDJ1CcXH",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const payload = $('Code - Normalizar y Validar Payload').item.json;\nconst stockRecords = $input.all().map(r => r.json);\nconst insuficientes = [];\nfor (const item of payload.items) {\n  const stockRec = stockRecords.find(s => {\n    const skus = s.fields['SKU (from Producto)'] || [];\n    return skus.some(sku => (sku || '').toLowerCase() === (item.sku || '').toLowerCase());\n  });\n  const disponible = stockRec ? (stockRec.fields['Cantidad Disponible'] || 0) : 0;\n  if (disponible < item.cantidad) {\n    insuficientes.push(`${item.producto || item.sku}: pide ${item.cantidad}, disponible ${disponible}`);\n  }\n}\nreturn [{ json: { ...payload, stock_suficiente: insuficientes.length === 0, detalle_faltantes: insuficientes.join(' | ') } }];"
+      },
+      "id": "80c12681-1af8-4aed-a6dd-db373f5c7c60",
+      "name": "Code - Validar Stock Suficiente",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "7eb7882b-d8e7-45d8-9167-b6b04f78130d",
+              "leftValue": "={{ $json.stock_suficiente }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a6518ae8-5016-4f3f-a481-5c9015449235",
+      "name": "IF - Stock Suficiente",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1440,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "app2Mcfjlv994NrMa",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl7oUxwqicXiBjFX",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ID Pedido",
+              "displayName": "ID Pedido",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Cliente",
+              "displayName": "Cliente",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha Pedido",
+              "displayName": "Fecha Pedido",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Estado Logistico",
+              "displayName": "Estado Logistico",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Recibido",
+                  "value": "Recibido"
+                },
+                {
+                  "name": "Anulado",
+                  "value": "Anulado"
+                },
+                {
+                  "name": "Pickeado",
+                  "value": "Pickeado"
+                },
+                {
+                  "name": "En Despacho",
+                  "value": "En Despacho"
+                },
+                {
+                  "name": "En Ruta",
+                  "value": "En Ruta"
+                },
+                {
+                  "name": "Entregado",
+                  "value": "Entregado"
+                },
+                {
+                  "name": "Entregado Parcial",
+                  "value": "Entregado Parcial"
+                },
+                {
+                  "name": "Rechazado",
+                  "value": "Rechazado"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Estado del Sistema",
+              "displayName": "Estado del Sistema",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Pendiente",
+                  "value": "Pendiente"
+                },
+                {
+                  "name": "Procesado por IA",
+                  "value": "Procesado por IA"
+                },
+                {
+                  "name": "Esperando Aprobacion Humana",
+                  "value": "Esperando Aprobacion Humana"
+                },
+                {
+                  "name": "Aprobado por Humano",
+                  "value": "Aprobado por Humano"
+                },
+                {
+                  "name": "Enviado al Cliente",
+                  "value": "Enviado al Cliente"
+                },
+                {
+                  "name": "Error",
+                  "value": "Error"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha Estimada Entrega",
+              "displayName": "Fecha Estimada Entrega",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Respuesta IA (JSON)",
+              "displayName": "Respuesta IA (JSON)",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Motivo Anulacion o Rechazo",
+              "displayName": "Motivo Anulacion o Rechazo",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Canal de Notificacion",
+              "displayName": "Canal de Notificacion",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Telegram",
+                  "value": "Telegram"
+                },
+                {
+                  "name": "Gmail",
+                  "value": "Gmail"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Aprobado Por",
+              "displayName": "Aprobado Por",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha Hora Aprobacion",
+              "displayName": "Fecha Hora Aprobacion",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Pedido_Items",
+              "displayName": "Pedido_Items",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Log_Errores",
+              "displayName": "Log_Errores",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Flag Error",
+              "displayName": "Flag Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "853333b3-8364-4e7f-b64a-78cdd00b4877",
+      "name": "Airtable - Crear Pedido (Pendiente)",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1680,
+        928
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "JOHtFfBVeDJ1CcXH",
+          "name": "Airtable Personal Access Token account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "anthropicApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: 'claude-3-5-sonnet-latest',\n  max_tokens: 400,\n  temperature: 0,\n  system: 'Sos un asistente logistico. Recibis datos de un pedido, el cliente (zona y dias de entrega habituales) y el stock disponible. Devolves EXCLUSIVAMENTE un JSON valido con las claves: estado_pedido (uno de: Recibido, Pickeado, En Despacho, En Ruta, Entregado, Entregado Parcial, Rechazado, Anulado), fecha_estimada_entrega (formato YYYY-MM-DD, calculada segun el proximo dia de entrega habitual de la tienda a partir de hoy), mensaje_cliente (texto breve y claro para enviarle al cliente) y confianza (numero entre 0 y 1). No agregues texto fuera del JSON.',\n  messages: [{\n    role: 'user',\n    content: `Pedido: ${JSON.stringify($('Code - Normalizar y Validar Payload').item.json.items)}\\nTienda: ${$('Airtable - Buscar Cliente por Tienda').item.json.fields['Nombre Tienda']}\\nZona de reparto: ${$('Airtable - Buscar Cliente por Tienda').item.json.fields['Zona de Reparto']}\\nDias de entrega habituales: ${($('Airtable - Buscar Cliente por Tienda').item.json.fields['Dias de Entrega']||[]).join(', ')}\\nFecha del pedido: ${$('Code - Normalizar y Validar Payload').item.json.fecha_pedido}\\nStock disponible relevante: ${JSON.stringify($('Airtable - Consultar Stock Disponible').all().map(r => r.json.fields))}`\n  }]\n}) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "5ea193f1-176a-434d-8ec2-5fcdd03de7a0",
+      "name": "Claude - Analizar Pedido (Anthropic API)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1920,
+        928
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "credentials": {
+        "anthropicApi": {
+          "id": "zQMsOeBFilLBdpHm",
+          "name": "Anthropic account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $json.content && $json.content[0] ? $json.content[0].text : '';\nlet parsed = null; let valido = false;\ntry {\n  const match = raw.match(/\\{[\\s\\S]*\\}/);\n  parsed = JSON.parse(match ? match[0] : raw);\n  const keys = ['estado_pedido','fecha_estimada_entrega','mensaje_cliente'];\n  valido = keys.every(k => parsed && parsed[k]);\n} catch (e) { valido = false; }\nreturn [{ json: { respuesta_ia_valida: valido, respuesta_ia: parsed, respuesta_ia_raw: raw } }];"
+      },
+      "id": "03d59f6e-f149-46b0-aa34-9f5fd6c0ce96",
+      "name": "Code - Parsear y Validar Respuesta de Claude",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cd85e1fb-d594-4dd2-827c-f33e2f575d25",
+              "leftValue": "={{ $json.respuesta_ia_valida }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "3b4223d2-f162-4bc2-b01f-994cbc187f4c",
+      "name": "IF - JSON de IA Valido",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2640,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "app2Mcfjlv994NrMa",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl7oUxwqicXiBjFX",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "ID Pedido",
+              "displayName": "ID Pedido",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Cliente",
+              "displayName": "Cliente",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha Pedido",
+              "displayName": "Fecha Pedido",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Estado Logistico",
+              "displayName": "Estado Logistico",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Recibido",
+                  "value": "Recibido"
+                },
+                {
+                  "name": "Anulado",
+                  "value": "Anulado"
+                },
+                {
+                  "name": "Pickeado",
+                  "value": "Pickeado"
+                },
+                {
+                  "name": "En Despacho",
+                  "value": "En Despacho"
+                },
+                {
+                  "name": "En Ruta",
+                  "value": "En Ruta"
+                },
+                {
+                  "name": "Entregado",
+                  "value": "Entregado"
+                },
+                {
+                  "name": "Entregado Parcial",
+                  "value": "Entregado Parcial"
+                },
+                {
+                  "name": "Rechazado",
+                  "value": "Rechazado"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Estado del Sistema",
+              "displayName": "Estado del Sistema",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Pendiente",
+                  "value": "Pendiente"
+                },
+                {
+                  "name": "Procesado por IA",
+                  "value": "Procesado por IA"
+                },
+                {
+                  "name": "Esperando Aprobacion Humana",
+                  "value": "Esperando Aprobacion Humana"
+                },
+                {
+                  "name": "Aprobado por Humano",
+                  "value": "Aprobado por Humano"
+                },
+                {
+                  "name": "Enviado al Cliente",
+                  "value": "Enviado al Cliente"
+                },
+                {
+                  "name": "Error",
+                  "value": "Error"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha Estimada Entrega",
+              "displayName": "Fecha Estimada Entrega",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Respuesta IA (JSON)",
+              "displayName": "Respuesta IA (JSON)",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Motivo Anulacion o Rechazo",
+              "displayName": "Motivo Anulacion o Rechazo",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Canal de Notificacion",
+              "displayName": "Canal de Notificacion",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Telegram",
+                  "value": "Telegram"
+                },
+                {
+                  "name": "Gmail",
+                  "value": "Gmail"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Aprobado Por",
+              "displayName": "Aprobado Por",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha Hora Aprobacion",
+              "displayName": "Fecha Hora Aprobacion",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Pedido_Items",
+              "displayName": "Pedido_Items",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Log_Errores",
+              "displayName": "Log_Errores",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Flag Error",
+              "displayName": "Flag Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "dba35a69-6dba-4d98-a851-8d5383c00951",
+      "name": "Airtable - Actualizar Pedido (Procesado por IA)",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        2880,
+        928
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "JOHtFfBVeDJ1CcXH",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "=8763125993",
+        "message": "*Nuevo pedido listo para revisar*\\n\\nPedido: {{ $('Code - Normalizar y Validar Payload').item.json.id_pedido }}\\nTienda: {{ $('Airtable - Buscar Cliente por Tienda').item.json.fields['Nombre Tienda'] }}\\nEstado propuesto: {{ $('Code - Parsear y Validar Respuesta de Claude').item.json.respuesta_ia.estado_pedido }}\\nFecha estimada de entrega: {{ $('Code - Parsear y Validar Respuesta de Claude').item.json.respuesta_ia.fecha_estimada_entrega }}\\nMensaje propuesto al cliente: {{ $('Code - Parsear y Validar Respuesta de Claude').item.json.respuesta_ia.mensaje_cliente }}\\n\\nAprobas el envio de este mensaje al cliente?",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double",
+            "approveLabel": "Aprobar y Enviar al Cliente",
+            "disapproveLabel": "Rechazar / Revisar"
+          }
+        },
+        "options": {}
+      },
+      "id": "1b471555-bbbd-4388-88f0-f7cd25217f27",
+      "name": "Telegram - Aprobacion Humana (HITL)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3120,
+        928
+      ],
+      "webhookId": "a0663382-8a4c-4f03-8e4e-a176fc774291",
+      "credentials": {
+        "telegramApi": {
+          "id": "wU8CNxng9GM4U3x5",
+          "name": "Telegram account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "81a7396b-dcc7-4ae6-85c0-28f404e89dbf",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d4a254c0-fa50-425e-be09-f25294d0cd0c",
+      "name": "IF - Aprobado por Humano",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3360,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "app2Mcfjlv994NrMa",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl7oUxwqicXiBjFX",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "ID Pedido",
+              "displayName": "ID Pedido",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Cliente",
+              "displayName": "Cliente",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha Pedido",
+              "displayName": "Fecha Pedido",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Estado Logistico",
+              "displayName": "Estado Logistico",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Recibido",
+                  "value": "Recibido"
+                },
+                {
+                  "name": "Anulado",
+                  "value": "Anulado"
+                },
+                {
+                  "name": "Pickeado",
+                  "value": "Pickeado"
+                },
+                {
+                  "name": "En Despacho",
+                  "value": "En Despacho"
+                },
+                {
+                  "name": "En Ruta",
+                  "value": "En Ruta"
+                },
+                {
+                  "name": "Entregado",
+                  "value": "Entregado"
+                },
+                {
+                  "name": "Entregado Parcial",
+                  "value": "Entregado Parcial"
+                },
+                {
+                  "name": "Rechazado",
+                  "value": "Rechazado"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Estado del Sistema",
+              "displayName": "Estado del Sistema",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Pendiente",
+                  "value": "Pendiente"
+                },
+                {
+                  "name": "Procesado por IA",
+                  "value": "Procesado por IA"
+                },
+                {
+                  "name": "Esperando Aprobacion Humana",
+                  "value": "Esperando Aprobacion Humana"
+                },
+                {
+                  "name": "Aprobado por Humano",
+                  "value": "Aprobado por Humano"
+                },
+                {
+                  "name": "Enviado al Cliente",
+                  "value": "Enviado al Cliente"
+                },
+                {
+                  "name": "Error",
+                  "value": "Error"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha Estimada Entrega",
+              "displayName": "Fecha Estimada Entrega",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Respuesta IA (JSON)",
+              "displayName": "Respuesta IA (JSON)",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Motivo Anulacion o Rechazo",
+              "displayName": "Motivo Anulacion o Rechazo",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Canal de Notificacion",
+              "displayName": "Canal de Notificacion",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Telegram",
+                  "value": "Telegram"
+                },
+                {
+                  "name": "Gmail",
+                  "value": "Gmail"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Aprobado Por",
+              "displayName": "Aprobado Por",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha Hora Aprobacion",
+              "displayName": "Fecha Hora Aprobacion",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Pedido_Items",
+              "displayName": "Pedido_Items",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Log_Errores",
+              "displayName": "Log_Errores",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Flag Error",
+              "displayName": "Flag Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "468896b1-acd0-478e-9ecc-7f5ef7554eb9",
+      "name": "Airtable - Marcar Aprobado por Humano",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        3600,
+        784
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "JOHtFfBVeDJ1CcXH",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Airtable - Buscar Cliente por Tienda').item.json.fields['Telegram Chat ID'] }}",
+        "text": "Hola {{ $('Airtable - Buscar Cliente por Tienda').item.json.fields['Nombre Tienda'] }}! {{ $('Code - Parsear y Validar Respuesta de Claude').item.json.respuesta_ia.mensaje_cliente }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "d3e46f42-36d3-4b9f-9470-9201db92b5e7",
+      "name": "Telegram - Notificar Estado de Entrega al Cliente",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3840,
+        784
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "webhookId": "3cab1f9e-f02b-4d3e-ade3-1317dd60e648",
+      "credentials": {
+        "telegramApi": {
+          "id": "wU8CNxng9GM4U3x5",
+          "name": "Telegram account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "app2Mcfjlv994NrMa",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl7oUxwqicXiBjFX",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "ID Pedido",
+              "displayName": "ID Pedido",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Cliente",
+              "displayName": "Cliente",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha Pedido",
+              "displayName": "Fecha Pedido",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Estado Logistico",
+              "displayName": "Estado Logistico",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Recibido",
+                  "value": "Recibido"
+                },
+                {
+                  "name": "Anulado",
+                  "value": "Anulado"
+                },
+                {
+                  "name": "Pickeado",
+                  "value": "Pickeado"
+                },
+                {
+                  "name": "En Despacho",
+                  "value": "En Despacho"
+                },
+                {
+                  "name": "En Ruta",
+                  "value": "En Ruta"
+                },
+                {
+                  "name": "Entregado",
+                  "value": "Entregado"
+                },
+                {
+                  "name": "Entregado Parcial",
+                  "value": "Entregado Parcial"
+                },
+                {
+                  "name": "Rechazado",
+                  "value": "Rechazado"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Estado del Sistema",
+              "displayName": "Estado del Sistema",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Pendiente",
+                  "value": "Pendiente"
+                },
+                {
+                  "name": "Procesado por IA",
+                  "value": "Procesado por IA"
+                },
+                {
+                  "name": "Esperando Aprobacion Humana",
+                  "value": "Esperando Aprobacion Humana"
+                },
+                {
+                  "name": "Aprobado por Humano",
+                  "value": "Aprobado por Humano"
+                },
+                {
+                  "name": "Enviado al Cliente",
+                  "value": "Enviado al Cliente"
+                },
+                {
+                  "name": "Error",
+                  "value": "Error"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha Estimada Entrega",
+              "displayName": "Fecha Estimada Entrega",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Respuesta IA (JSON)",
+              "displayName": "Respuesta IA (JSON)",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Motivo Anulacion o Rechazo",
+              "displayName": "Motivo Anulacion o Rechazo",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Canal de Notificacion",
+              "displayName": "Canal de Notificacion",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Telegram",
+                  "value": "Telegram"
+                },
+                {
+                  "name": "Gmail",
+                  "value": "Gmail"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Aprobado Por",
+              "displayName": "Aprobado Por",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha Hora Aprobacion",
+              "displayName": "Fecha Hora Aprobacion",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Pedido_Items",
+              "displayName": "Pedido_Items",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Log_Errores",
+              "displayName": "Log_Errores",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Flag Error",
+              "displayName": "Flag Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "a4d944ab-c9bd-4e7e-9abb-40ee7b62cfd2",
+      "name": "Airtable - Marcar Enviado al Cliente",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        4080,
+        784
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "JOHtFfBVeDJ1CcXH",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { status: 'ok', pedido: $('Code - Normalizar y Validar Payload').item.json.id_pedido } }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "532c9461-baa1-4af3-a535-9012efa3af0e",
+      "name": "Responder 200 (Proceso Completo)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        4320,
+        784
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "app2Mcfjlv994NrMa",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl7oUxwqicXiBjFX",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "ID Pedido",
+              "displayName": "ID Pedido",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Cliente",
+              "displayName": "Cliente",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha Pedido",
+              "displayName": "Fecha Pedido",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Estado Logistico",
+              "displayName": "Estado Logistico",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Recibido",
+                  "value": "Recibido"
+                },
+                {
+                  "name": "Anulado",
+                  "value": "Anulado"
+                },
+                {
+                  "name": "Pickeado",
+                  "value": "Pickeado"
+                },
+                {
+                  "name": "En Despacho",
+                  "value": "En Despacho"
+                },
+                {
+                  "name": "En Ruta",
+                  "value": "En Ruta"
+                },
+                {
+                  "name": "Entregado",
+                  "value": "Entregado"
+                },
+                {
+                  "name": "Entregado Parcial",
+                  "value": "Entregado Parcial"
+                },
+                {
+                  "name": "Rechazado",
+                  "value": "Rechazado"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Estado del Sistema",
+              "displayName": "Estado del Sistema",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Pendiente",
+                  "value": "Pendiente"
+                },
+                {
+                  "name": "Procesado por IA",
+                  "value": "Procesado por IA"
+                },
+                {
+                  "name": "Esperando Aprobacion Humana",
+                  "value": "Esperando Aprobacion Humana"
+                },
+                {
+                  "name": "Aprobado por Humano",
+                  "value": "Aprobado por Humano"
+                },
+                {
+                  "name": "Enviado al Cliente",
+                  "value": "Enviado al Cliente"
+                },
+                {
+                  "name": "Error",
+                  "value": "Error"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha Estimada Entrega",
+              "displayName": "Fecha Estimada Entrega",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Respuesta IA (JSON)",
+              "displayName": "Respuesta IA (JSON)",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Motivo Anulacion o Rechazo",
+              "displayName": "Motivo Anulacion o Rechazo",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Canal de Notificacion",
+              "displayName": "Canal de Notificacion",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Telegram",
+                  "value": "Telegram"
+                },
+                {
+                  "name": "Gmail",
+                  "value": "Gmail"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Aprobado Por",
+              "displayName": "Aprobado Por",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha Hora Aprobacion",
+              "displayName": "Fecha Hora Aprobacion",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Pedido_Items",
+              "displayName": "Pedido_Items",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Log_Errores",
+              "displayName": "Log_Errores",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Flag Error",
+              "displayName": "Flag Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "2858019a-effb-42c8-a459-80af147cb5c8",
+      "name": "Airtable - Marcar Rechazado por Operador",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        3600,
+        1072
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "JOHtFfBVeDJ1CcXH",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { status: 'error', motivo: 'datos_faltantes', detalle: $('Code - Normalizar y Validar Payload').item.json.campos_faltantes } }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "dcd20fec-3f99-4b7f-95a4-8d543c51bd2f",
+      "name": "Responder Error (Datos Faltantes)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "app2Mcfjlv994NrMa",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblUAcTJ7jSJ1LNUZ",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ID Error",
+              "displayName": "ID Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha Hora",
+              "displayName": "Fecha Hora",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Pedido Relacionado",
+              "displayName": "Pedido Relacionado",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Tipo de Error",
+              "displayName": "Tipo de Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Fallo API IA",
+                  "value": "Fallo API IA"
+                },
+                {
+                  "name": "Fallo API Airtable",
+                  "value": "Fallo API Airtable"
+                },
+                {
+                  "name": "Datos Faltantes",
+                  "value": "Datos Faltantes"
+                },
+                {
+                  "name": "Timeout",
+                  "value": "Timeout"
+                },
+                {
+                  "name": "Fallo Envio Notificacion",
+                  "value": "Fallo Envio Notificacion"
+                },
+                {
+                  "name": "Otro",
+                  "value": "Otro"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Nodo que Fallo",
+              "displayName": "Nodo que Fallo",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Detalle del Error",
+              "displayName": "Detalle del Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Estado del Error",
+              "displayName": "Estado del Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Nuevo",
+                  "value": "Nuevo"
+                },
+                {
+                  "name": "Revisado",
+                  "value": "Revisado"
+                },
+                {
+                  "name": "Resuelto",
+                  "value": "Resuelto"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "fbc32acb-a07e-499c-9510-6aefc1b36262",
+      "name": "Airtable - Registrar Error (Datos Faltantes)",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "JOHtFfBVeDJ1CcXH",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { status: 'ignorado', motivo: 'pedido_duplicado' } }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "92c358a1-2325-4adb-a1ac-28cfe767ee13",
+      "name": "Responder 200 (Duplicado, Ignorado)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "app2Mcfjlv994NrMa",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblUAcTJ7jSJ1LNUZ",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ID Error",
+              "displayName": "ID Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha Hora",
+              "displayName": "Fecha Hora",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Pedido Relacionado",
+              "displayName": "Pedido Relacionado",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Tipo de Error",
+              "displayName": "Tipo de Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Fallo API IA",
+                  "value": "Fallo API IA"
+                },
+                {
+                  "name": "Fallo API Airtable",
+                  "value": "Fallo API Airtable"
+                },
+                {
+                  "name": "Datos Faltantes",
+                  "value": "Datos Faltantes"
+                },
+                {
+                  "name": "Timeout",
+                  "value": "Timeout"
+                },
+                {
+                  "name": "Fallo Envio Notificacion",
+                  "value": "Fallo Envio Notificacion"
+                },
+                {
+                  "name": "Otro",
+                  "value": "Otro"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Nodo que Fallo",
+              "displayName": "Nodo que Fallo",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Detalle del Error",
+              "displayName": "Detalle del Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Estado del Error",
+              "displayName": "Estado del Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Nuevo",
+                  "value": "Nuevo"
+                },
+                {
+                  "name": "Revisado",
+                  "value": "Revisado"
+                },
+                {
+                  "name": "Resuelto",
+                  "value": "Resuelto"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "0aaf125c-2077-43ab-a791-a81efe74cec2",
+      "name": "Airtable - Registrar Error (Cliente Invalido)",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        720,
+        1040
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "JOHtFfBVeDJ1CcXH",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "app2Mcfjlv994NrMa",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblUAcTJ7jSJ1LNUZ",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ID Error",
+              "displayName": "ID Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha Hora",
+              "displayName": "Fecha Hora",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Pedido Relacionado",
+              "displayName": "Pedido Relacionado",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Tipo de Error",
+              "displayName": "Tipo de Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Fallo API IA",
+                  "value": "Fallo API IA"
+                },
+                {
+                  "name": "Fallo API Airtable",
+                  "value": "Fallo API Airtable"
+                },
+                {
+                  "name": "Datos Faltantes",
+                  "value": "Datos Faltantes"
+                },
+                {
+                  "name": "Timeout",
+                  "value": "Timeout"
+                },
+                {
+                  "name": "Fallo Envio Notificacion",
+                  "value": "Fallo Envio Notificacion"
+                },
+                {
+                  "name": "Otro",
+                  "value": "Otro"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Nodo que Fallo",
+              "displayName": "Nodo que Fallo",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Detalle del Error",
+              "displayName": "Detalle del Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Estado del Error",
+              "displayName": "Estado del Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Nuevo",
+                  "value": "Nuevo"
+                },
+                {
+                  "name": "Revisado",
+                  "value": "Revisado"
+                },
+                {
+                  "name": "Resuelto",
+                  "value": "Resuelto"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "822dd3ae-eccd-4388-aefe-daca938485b6",
+      "name": "Airtable - Registrar Error (Stock Insuficiente)",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1440,
+        1152
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "JOHtFfBVeDJ1CcXH",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "app2Mcfjlv994NrMa",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblUAcTJ7jSJ1LNUZ",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ID Error",
+              "displayName": "ID Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha Hora",
+              "displayName": "Fecha Hora",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Pedido Relacionado",
+              "displayName": "Pedido Relacionado",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Tipo de Error",
+              "displayName": "Tipo de Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Fallo API IA",
+                  "value": "Fallo API IA"
+                },
+                {
+                  "name": "Fallo API Airtable",
+                  "value": "Fallo API Airtable"
+                },
+                {
+                  "name": "Datos Faltantes",
+                  "value": "Datos Faltantes"
+                },
+                {
+                  "name": "Timeout",
+                  "value": "Timeout"
+                },
+                {
+                  "name": "Fallo Envio Notificacion",
+                  "value": "Fallo Envio Notificacion"
+                },
+                {
+                  "name": "Otro",
+                  "value": "Otro"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Nodo que Fallo",
+              "displayName": "Nodo que Fallo",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Detalle del Error",
+              "displayName": "Detalle del Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Estado del Error",
+              "displayName": "Estado del Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Nuevo",
+                  "value": "Nuevo"
+                },
+                {
+                  "name": "Revisado",
+                  "value": "Revisado"
+                },
+                {
+                  "name": "Resuelto",
+                  "value": "Resuelto"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "68f325d5-dc40-4e2a-b9b7-4c8f9defd0e8",
+      "name": "Airtable - Registrar Error (Fallo API IA)",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        2160,
+        1152
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "JOHtFfBVeDJ1CcXH",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "app2Mcfjlv994NrMa",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblUAcTJ7jSJ1LNUZ",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ID Error",
+              "displayName": "ID Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha Hora",
+              "displayName": "Fecha Hora",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Pedido Relacionado",
+              "displayName": "Pedido Relacionado",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Tipo de Error",
+              "displayName": "Tipo de Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Fallo API IA",
+                  "value": "Fallo API IA"
+                },
+                {
+                  "name": "Fallo API Airtable",
+                  "value": "Fallo API Airtable"
+                },
+                {
+                  "name": "Datos Faltantes",
+                  "value": "Datos Faltantes"
+                },
+                {
+                  "name": "Timeout",
+                  "value": "Timeout"
+                },
+                {
+                  "name": "Fallo Envio Notificacion",
+                  "value": "Fallo Envio Notificacion"
+                },
+                {
+                  "name": "Otro",
+                  "value": "Otro"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Nodo que Fallo",
+              "displayName": "Nodo que Fallo",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Detalle del Error",
+              "displayName": "Detalle del Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Estado del Error",
+              "displayName": "Estado del Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Nuevo",
+                  "value": "Nuevo"
+                },
+                {
+                  "name": "Revisado",
+                  "value": "Revisado"
+                },
+                {
+                  "name": "Resuelto",
+                  "value": "Resuelto"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "bc947a62-3fc8-4ee5-ad93-b9da0e8dd325",
+      "name": "Airtable - Registrar Error (Respuesta IA Invalida)",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        2640,
+        1152
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "JOHtFfBVeDJ1CcXH",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "app2Mcfjlv994NrMa",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl7oUxwqicXiBjFX",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "ID Pedido",
+              "displayName": "ID Pedido",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Cliente",
+              "displayName": "Cliente",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha Pedido",
+              "displayName": "Fecha Pedido",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Estado Logistico",
+              "displayName": "Estado Logistico",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Recibido",
+                  "value": "Recibido"
+                },
+                {
+                  "name": "Anulado",
+                  "value": "Anulado"
+                },
+                {
+                  "name": "Pickeado",
+                  "value": "Pickeado"
+                },
+                {
+                  "name": "En Despacho",
+                  "value": "En Despacho"
+                },
+                {
+                  "name": "En Ruta",
+                  "value": "En Ruta"
+                },
+                {
+                  "name": "Entregado",
+                  "value": "Entregado"
+                },
+                {
+                  "name": "Entregado Parcial",
+                  "value": "Entregado Parcial"
+                },
+                {
+                  "name": "Rechazado",
+                  "value": "Rechazado"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Estado del Sistema",
+              "displayName": "Estado del Sistema",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Pendiente",
+                  "value": "Pendiente"
+                },
+                {
+                  "name": "Procesado por IA",
+                  "value": "Procesado por IA"
+                },
+                {
+                  "name": "Esperando Aprobacion Humana",
+                  "value": "Esperando Aprobacion Humana"
+                },
+                {
+                  "name": "Aprobado por Humano",
+                  "value": "Aprobado por Humano"
+                },
+                {
+                  "name": "Enviado al Cliente",
+                  "value": "Enviado al Cliente"
+                },
+                {
+                  "name": "Error",
+                  "value": "Error"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha Estimada Entrega",
+              "displayName": "Fecha Estimada Entrega",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Respuesta IA (JSON)",
+              "displayName": "Respuesta IA (JSON)",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Motivo Anulacion o Rechazo",
+              "displayName": "Motivo Anulacion o Rechazo",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Canal de Notificacion",
+              "displayName": "Canal de Notificacion",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Telegram",
+                  "value": "Telegram"
+                },
+                {
+                  "name": "Gmail",
+                  "value": "Gmail"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Aprobado Por",
+              "displayName": "Aprobado Por",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha Hora Aprobacion",
+              "displayName": "Fecha Hora Aprobacion",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Pedido_Items",
+              "displayName": "Pedido_Items",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Log_Errores",
+              "displayName": "Log_Errores",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Flag Error",
+              "displayName": "Flag Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "4f1b58d4-95b3-405f-839c-d68f2d0b460e",
+      "name": "Airtable - Marcar Pedido en Error",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        2880,
+        1280
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "JOHtFfBVeDJ1CcXH",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "=8763125993",
+        "text": "Se registro un error en el flujo de pedidos. Revisar la tabla Log de Errores en Airtable para el detalle.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "7d3fb941-324e-46f1-8be6-998c9f06bcb2",
+      "name": "Telegram - Notificar Error Interno al Operador",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3184,
+        1280
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "webhookId": "97efdfcf-2b30-4571-bb52-842de733a8fa",
+      "credentials": {
+        "telegramApi": {
+          "id": "wU8CNxng9GM4U3x5",
+          "name": "Telegram account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { status: 'error', motivo: 'fallo_interno' } }}",
+        "options": {
+          "responseCode": 502
+        }
+      },
+      "id": "64ad9328-33f1-4213-9673-f03e3a4307bf",
+      "name": "Responder Error (500/502)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3424,
+        1280
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "31383fe9-3343-4eb2-83eb-54f8489a076e",
+      "name": "Error Trigger - Fallos No Controlados",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        1440
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "app2Mcfjlv994NrMa",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblUAcTJ7jSJ1LNUZ",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ID Error",
+              "displayName": "ID Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha Hora",
+              "displayName": "Fecha Hora",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Pedido Relacionado",
+              "displayName": "Pedido Relacionado",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Tipo de Error",
+              "displayName": "Tipo de Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Fallo API IA",
+                  "value": "Fallo API IA"
+                },
+                {
+                  "name": "Fallo API Airtable",
+                  "value": "Fallo API Airtable"
+                },
+                {
+                  "name": "Datos Faltantes",
+                  "value": "Datos Faltantes"
+                },
+                {
+                  "name": "Timeout",
+                  "value": "Timeout"
+                },
+                {
+                  "name": "Fallo Envio Notificacion",
+                  "value": "Fallo Envio Notificacion"
+                },
+                {
+                  "name": "Otro",
+                  "value": "Otro"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Nodo que Fallo",
+              "displayName": "Nodo que Fallo",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Detalle del Error",
+              "displayName": "Detalle del Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Estado del Error",
+              "displayName": "Estado del Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Nuevo",
+                  "value": "Nuevo"
+                },
+                {
+                  "name": "Revisado",
+                  "value": "Revisado"
+                },
+                {
+                  "name": "Resuelto",
+                  "value": "Resuelto"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "68502be9-cc50-4c27-9221-74f0db8fd17e",
+      "name": "Airtable - Registrar Error Critico (Global)",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -480,
+        1440
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "JOHtFfBVeDJ1CcXH",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "=8763125993",
+        "text": "ALERTA CRITICA: el workflow de Procesamiento de Pedidos fallo de forma no controlada. Revisar ejecuciones en n8n y la tabla Log de Errores.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "80e78291-2e42-41e7-b1c5-08225f33cecc",
+      "name": "Telegram - Alerta Critica al Operador",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -240,
+        1440
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "webhookId": "21ef3822-ebac-455f-a719-d73e91ce774b",
+      "credentials": {
+        "telegramApi": {
+          "id": "wU8CNxng9GM4U3x5",
+          "name": "Telegram account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Trigger - Nuevo Pedido (Webhook)": {
+      "main": [
+        [
+          {
+            "node": "Code - Normalizar y Validar Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Normalizar y Validar Payload": {
+      "main": [
+        [
+          {
+            "node": "IF - Datos de Entrada Completos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Datos de Entrada Completos": {
+      "main": [
+        [
+          {
+            "node": "Airtable - Verificar Pedido Duplicado (Anti-Loop)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Airtable - Registrar Error (Datos Faltantes)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable - Registrar Error (Datos Faltantes)": {
+      "main": [
+        [
+          {
+            "node": "Responder Error (Datos Faltantes)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable - Verificar Pedido Duplicado (Anti-Loop)": {
+      "main": [
+        [
+          {
+            "node": "IF - Pedido Ya Existe (Anti-Loop)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Pedido Ya Existe (Anti-Loop)": {
+      "main": [
+        [
+          {
+            "node": "Responder 200 (Duplicado, Ignorado)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Airtable - Buscar Cliente por Tienda",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable - Buscar Cliente por Tienda": {
+      "main": [
+        [
+          {
+            "node": "IF - Cliente Encontrado y Activo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Cliente Encontrado y Activo": {
+      "main": [
+        [
+          {
+            "node": "Airtable - Consultar Stock Disponible",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Airtable - Registrar Error (Cliente Invalido)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable - Registrar Error (Cliente Invalido)": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Notificar Error Interno al Operador",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable - Consultar Stock Disponible": {
+      "main": [
+        [
+          {
+            "node": "Code - Validar Stock Suficiente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Validar Stock Suficiente": {
+      "main": [
+        [
+          {
+            "node": "IF - Stock Suficiente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Stock Suficiente": {
+      "main": [
+        [
+          {
+            "node": "Airtable - Crear Pedido (Pendiente)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Airtable - Registrar Error (Stock Insuficiente)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable - Registrar Error (Stock Insuficiente)": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Notificar Error Interno al Operador",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable - Crear Pedido (Pendiente)": {
+      "main": [
+        [
+          {
+            "node": "Claude - Analizar Pedido (Anthropic API)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram - Notificar Error Interno al Operador",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude - Analizar Pedido (Anthropic API)": {
+      "main": [
+        [
+          {
+            "node": "Code - Parsear y Validar Respuesta de Claude",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Airtable - Registrar Error (Fallo API IA)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable - Registrar Error (Fallo API IA)": {
+      "main": [
+        [
+          {
+            "node": "Airtable - Marcar Pedido en Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Parsear y Validar Respuesta de Claude": {
+      "main": [
+        [
+          {
+            "node": "IF - JSON de IA Valido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - JSON de IA Valido": {
+      "main": [
+        [
+          {
+            "node": "Airtable - Actualizar Pedido (Procesado por IA)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Airtable - Registrar Error (Respuesta IA Invalida)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable - Registrar Error (Respuesta IA Invalida)": {
+      "main": [
+        [
+          {
+            "node": "Airtable - Marcar Pedido en Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable - Marcar Pedido en Error": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Notificar Error Interno al Operador",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram - Notificar Error Interno al Operador": {
+      "main": [
+        [
+          {
+            "node": "Responder Error (500/502)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable - Actualizar Pedido (Procesado por IA)": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Aprobacion Humana (HITL)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram - Aprobacion Humana (HITL)": {
+      "main": [
+        [
+          {
+            "node": "IF - Aprobado por Humano",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Aprobado por Humano": {
+      "main": [
+        [
+          {
+            "node": "Airtable - Marcar Aprobado por Humano",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Airtable - Marcar Rechazado por Operador",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable - Marcar Aprobado por Humano": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Notificar Estado de Entrega al Cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram - Notificar Estado de Entrega al Cliente": {
+      "main": [
+        [
+          {
+            "node": "Airtable - Marcar Enviado al Cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable - Marcar Enviado al Cliente": {
+      "main": [
+        [
+          {
+            "node": "Responder 200 (Proceso Completo)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable - Marcar Rechazado por Operador": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Notificar Error Interno al Operador",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger - Fallos No Controlados": {
+      "main": [
+        [
+          {
+            "node": "Airtable - Registrar Error Critico (Global)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable - Registrar Error Critico (Global)": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Alerta Critica al Operador",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "edc03655-62fd-4c74-b91c-925e02880dc6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "64db0a817eb00cfcead028a8b7894888f890dd0ef61fd52017869b04cce0b235"
+  },
+  "nodeGroups": [],
+  "id": "6lDJWQk4MOIKCMUd",
+  "tags": []
+}
