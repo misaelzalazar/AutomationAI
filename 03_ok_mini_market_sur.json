@@ -1,0 +1,9 @@
+{
+  "id_pedido": "PED-0009",
+  "tienda": "Mini Market Sur",
+  "fecha_pedido": "2026-08-17",
+  "canal_preferido": "Telegram",
+  "items": [
+    { "producto": "Detergente 750ml", "sku": "LIM-002", "cantidad": 6 }
+  ]
+}

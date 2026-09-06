@@ -1,0 +1,10 @@
+{
+  "id_pedido": "PED-0007",
+  "tienda": "Almacen Don Pedro",
+  "fecha_pedido": "2026-08-17",
+  "canal_preferido": "Telegram",
+  "items": [
+    { "producto": "Gaseosa Cola 2.25L", "sku": "BEB-001", "cantidad": 10 },
+    { "producto": "Agua Mineral 1.5L", "sku": "BEB-002", "cantidad": 5 }
+  ]
+}

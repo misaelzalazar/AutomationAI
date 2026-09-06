@@ -1,0 +1,9 @@
+{
+  "id_pedido": "PED-0008",
+  "tienda": "Autoservicio La Esquina",
+  "fecha_pedido": "2026-08-17",
+  "canal_preferido": "Telegram",
+  "items": [
+    { "producto": "Leche Entera 1L", "sku": "LAC-005", "cantidad": 12 }
+  ]
+}

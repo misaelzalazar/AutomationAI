@@ -1,0 +1,7 @@
+{
+  "id_pedido": "PED-0010",
+  "fecha_pedido": "2026-08-17",
+  "items": [
+    { "producto": "Gaseosa Cola 2.25L", "sku": "BEB-001", "cantidad": 3 }
+  ]
+}
